@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: saymen_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: saymen
+      POSTGRES_PASSWORD: saymen_dev_password
+      POSTGRES_DB: saymen_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - saymen_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saymen"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: saymen_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - saymen_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  saymen_pg_data:
+  saymen_redis_data:

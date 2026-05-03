@@ -1,0 +1,6 @@
+company_name,phone,industry,region,city,decision_maker_name,decision_maker_role,website,known_email,source,notes,status,attempts,last_call_at,call_outcome,collected_email,callback_at,do_not_call
+ООО «Аптека-Плюс»,+74951234567,pharmacy,Москва,Москва,Иванова Мария Сергеевна,главный фармацевт,apteka-plus.ru,info@apteka-plus.ru,2gis,Сеть из 4 точек СВАО,new,0,,,,,false
+ИП Петров А.А. (Аптека «Здоровье»),+78127654321,pharmacy,Санкт-Петербург,Санкт-Петербург,Петров Алексей,владелец,,,findbase,Одна точка у метро,new,0,,,,,false
+ООО «Быстрая Доставка»,+74999876543,delivery,Москва,Москва,,,bystrayadostavka.ru,zakaz@bystrayadostavka.ru,2gis,Локальная служба еды,new,0,,,,,false
+ООО «Курьер 24»,+73431112233,delivery,Свердловская область,Екатеринбург,Сидоров Иван,директор по операциям,courier24.ru,,rusprofile,Возят документы по городу,new,0,,,,,false
+АО «МедЦентр Премиум»,+74957778899,clinic,Москва,Москва,,главврач,medcentrpremium.ru,reg@medcentrpremium.ru,manual,Многопрофильная клиника,new,0,,,,,false

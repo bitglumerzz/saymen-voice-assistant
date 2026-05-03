@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.pem
+
+# Environment — НИКОГДА не коммитить!
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.backup*
+.env.bak
+.env.*.local
+*.private.*
+*.secret.*
+
+# Содержит токены провайдеров
+orchestrator/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Drizzle
+drizzle/meta/_journal.json.bak
+
+# Локальные данные / выгрузки
+/data/uploads/
+/data/exports/
+*.local.csv
+
+# Аудиозаписи (тестовые)
+/recordings/
+*.wav
+*.mp3
+*.opus
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

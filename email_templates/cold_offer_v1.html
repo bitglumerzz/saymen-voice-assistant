@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saymen — голосовой ассистент для бизнеса</title>
+<!--
+  Шаблон: cold_offer_v1
+  Назначение: коммерческое предложение, отправляется автоматически после успешного
+  холодного звонка, в котором голосовой ассистент собрал email ЛПР.
+  Плейсхолдеры:
+    {{name}}            - имя получателя (если известно), иначе "Здравствуйте!"
+    {{company}}         - название компании
+    {{industry_hook}}   - персонализация под отрасль (1 предложение)
+    {{call_summary}}    - краткое резюме звонка одной фразой
+    {{calendar_link}}   - ссылка на календарь для бронирования демо
+    {{pixel_url}}       - ссылка на трекинг-пиксель открытий
+    {{unsubscribe_url}} - ссылка отписки (обязательна по 38-ФЗ)
+-->
+</head>
+<body style="margin:0;padding:0;background:#f6f8fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f8fa;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+
+        <!-- Header -->
+        <tr>
+          <td style="padding:32px 40px 16px 40px;">
+            <div style="font-size:22px;font-weight:700;color:#1f4e79;letter-spacing:-0.3px;">
+              Saymen
+            </div>
+            <div style="font-size:13px;color:#6b7280;margin-top:4px;">
+              Голосовые ассистенты для бизнеса
+            </div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:8px 40px 0 40px;font-size:16px;line-height:1.6;color:#1f2937;">
+
+            <p style="margin:16px 0;">
+              {{name}},
+            </p>
+
+            <p style="margin:16px 0;">
+              как и обещал в звонке — отправляю короткое описание. Если по голосу было не очень понятно, кто вам звонил: с вами разговаривал наш голосовой ассистент. {{call_summary}}
+            </p>
+
+            <p style="margin:16px 0;">
+              Мы помогаем компаниям типа вашей закрыть две задачи сразу:
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;">
+              <tr>
+                <td style="padding:8px 0;font-size:15px;color:#1f2937;">
+                  <span style="display:inline-block;width:24px;color:#1f4e79;font-weight:bold;">1.</span>
+                  <strong>Принимать входящие звонки клиентов</strong> — по графику работы, наличию, статусу заказа. Отвечает мгновенно, не теряет звонки в часы пик, работает 24/7.
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;font-size:15px;color:#1f2937;">
+                  <span style="display:inline-block;width:24px;color:#1f4e79;font-weight:bold;">2.</span>
+                  <strong>Обзванивать вашу базу</strong> — подтверждение заказов, NPS-опросы, реактивация спящих клиентов, информирование об акциях.
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:16px 0;">
+              {{industry_hook}}
+            </p>
+
+            <!-- Numbers block -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;background:#f0f6fc;border-radius:6px;">
+              <tr>
+                <td style="padding:20px 24px;">
+                  <div style="font-size:13px;color:#6b7280;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
+                    На цифрах
+                  </div>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="padding:6px 0;font-size:15px;color:#1f2937;">
+                        От <strong>6&nbsp;₽ за минуту</strong> разговора — в 3–5 раз дешевле живого оператора.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:6px 0;font-size:15px;color:#1f2937;">
+                        До <strong>100&nbsp;звонков одновременно</strong> с одного номера.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:6px 0;font-size:15px;color:#1f2937;">
+                        Запуск под ваш сценарий — <strong>5–7 рабочих дней</strong>, без интеграции — за день.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:16px 0;">
+              Если хотите услышать живой пример под вашу задачу и обсудить, что даст это в деньгах — забронируйте 20 минут в моём календаре. Покажу запись разговора с реальным клиентом из вашей отрасли и посчитаю экономику под ваш объём звонков.
+            </p>
+
+            <!-- CTA Button -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;">
+              <tr>
+                <td style="background:#1f4e79;border-radius:6px;">
+                  <a href="{{calendar_link}}" style="display:inline-block;padding:14px 28px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                    Забронировать демо &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:16px 0;">
+              Если демо сейчас не нужно, но интересно посмотреть подробнее — у нас есть короткое видео (2 минуты): <a href="{{calendar_link}}?utm_medium=video" style="color:#1f4e79;">smn.li/demo-video</a>.
+            </p>
+
+            <p style="margin:16px 0;">
+              Если попал не туда или ваша задача далека от голосовых ассистентов — просто ответьте «не моё», уберу из списка и больше не побеспокою.
+            </p>
+
+            <p style="margin:24px 0 8px 0;">
+              С уважением,<br>
+              <strong>Антон Майоров</strong><br>
+              <span style="color:#6b7280;font-size:14px;">Saymen — voice AI для бизнеса</span>
+            </p>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:24px 40px 32px 40px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;line-height:1.6;">
+            Письмо отправлено компании <strong>{{company}}</strong> по результатам короткого голосового разговора.
+            Если вы не хотите получать от нас сообщений — <a href="{{unsubscribe_url}}" style="color:#9ca3af;text-decoration:underline;">отписаться одним кликом</a>.
+          </td>
+        </tr>
+
+      </table>
+
+      <!-- Tracking pixel -->
+      <img src="{{pixel_url}}" width="1" height="1" alt="" style="display:block;border:0;">
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
