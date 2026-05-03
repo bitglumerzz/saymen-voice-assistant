@@ -26,7 +26,6 @@ export default function Home() {
           href="/contacts"
           title="Контакты"
           description="Загрузка CSV, сегментация, стоп-лист"
-          stub
         />
         <NavCard
           href="/calls"

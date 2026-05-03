@@ -6,6 +6,12 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["db/**/*.ts", "src/env.ts", "drizzle.config.ts", "src/app/api/**/*.ts"],
+  "include": [
+    "db/**/*.ts",
+    "src/env.ts",
+    "src/lib/**/*.ts",
+    "drizzle.config.ts",
+    "src/app/api/**/*.ts"
+  ],
   "exclude": ["node_modules", ".next", "dist", "src/app/page.tsx", "src/app/layout.tsx"]
 }
