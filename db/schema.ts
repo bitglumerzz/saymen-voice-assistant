@@ -38,6 +38,8 @@ export const industryEnum = pgEnum("industry", [
   "retail",
   "services",
   "logistics",
+  "construction",
+  "utilities",
   "other",
 ]);
 
