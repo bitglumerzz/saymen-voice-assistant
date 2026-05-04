@@ -20,24 +20,21 @@ export default function Home() {
           href="/campaigns"
           title="Кампании"
           description="Запуск и мониторинг исходящих обзвонов"
-          stub
         />
         <NavCard
           href="/contacts"
           title="Контакты"
-          description="Загрузка CSV, сегментация, стоп-лист"
+          description="Загрузка CSV, сегментация по отраслям"
         />
         <NavCard
           href="/calls"
           title="Журнал звонков"
-          description="Транскрипты, аудиозаписи, итоги"
-          stub
+          description="Telegram-чаты и телефонные звонки с транскриптами"
         />
         <NavCard
-          href="/analytics"
-          title="Аналитика"
-          description="Воронка, конверсии, метрики качества"
-          stub
+          href="/stop-list"
+          title="Стоп-лист"
+          description="Номера, которым не звоним (38-ФЗ)"
         />
       </section>
 
