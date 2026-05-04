@@ -312,6 +312,10 @@ export const transcriptTurns = pgTable(
     speaker: varchar("speaker", { length: 16 }).notNull(), // "bot" | "human"
     text: text("text").notNull(),
 
+    // URL аудио-файла (если есть): голосовое от пользователя или MP3 ответа бота.
+    // Относительный путь (data/recordings/...), отдаётся через /api/recordings/[filename].
+    audioUrl: text("audio_url"),
+
     // Тайминг внутри звонка (мс от начала)
     startMs: integer("start_ms"),
     endMs: integer("end_ms"),

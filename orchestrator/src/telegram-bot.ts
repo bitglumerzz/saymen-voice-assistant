@@ -20,6 +20,7 @@ import { config } from "./config.js";
 import { logger } from "./logger.js";
 import { buildSystemPrompt } from "./prompt-loader.js";
 import { insertCall, insertTranscriptTurn, updateCall, dbEnabled, DEMO_ORG_ID } from "./db.js";
+import { saveAudio } from "./recordings.js";
 import type { LlmMessage } from "./types.js";
 
 type ChatState = {
@@ -56,6 +57,60 @@ export function startTelegramBot(): TelegramBot | null {
     logger.error({ err: String(e) }, "[telegram] polling error"),
   );
 
+  // ===== Админ-команды (whitelist через TELEGRAM_ADMIN_IDS) =====
+  // Формат env: TELEGRAM_ADMIN_IDS=123456789,987654321
+  const adminIds = new Set(
+    (process.env.TELEGRAM_ADMIN_IDS ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map(Number),
+  );
+
+  function isAdmin(userId?: number): boolean {
+    return userId !== undefined && adminIds.has(userId);
+  }
+
+  bot.onText(/^\/help$/, async (msg) => {
+    if (!isAdmin(msg.from?.id)) return; // обычным пользователям не показываем
+    await bot.sendMessage(
+      msg.chat.id,
+      "Админ-команды:\n" +
+        "/stats — сводка по диалогам\n" +
+        "/last_call — последний разговор с резюме\n" +
+        "/lookup +7XXXXXXXXXX — найти контакт по телефону\n" +
+        "/help — это сообщение",
+    );
+  });
+
+  bot.onText(/^\/stats$/, async (msg) => {
+    if (!isAdmin(msg.from?.id)) return;
+    if (!dbEnabled) {
+      await bot.sendMessage(msg.chat.id, "БД не подключена");
+      return;
+    }
+    const text = await formatStats();
+    await bot.sendMessage(msg.chat.id, text, { parse_mode: "Markdown" });
+  });
+
+  bot.onText(/^\/last_call$/, async (msg) => {
+    if (!isAdmin(msg.from?.id)) return;
+    if (!dbEnabled) {
+      await bot.sendMessage(msg.chat.id, "БД не подключена");
+      return;
+    }
+    const text = await formatLastCall();
+    await bot.sendMessage(msg.chat.id, text, { parse_mode: "Markdown" });
+  });
+
+  bot.onText(/^\/lookup\s+(\+7\d{10})$/, async (msg, match) => {
+    if (!isAdmin(msg.from?.id)) return;
+    if (!dbEnabled || !match) return;
+    const phone = match[1]!;
+    const text = await formatLookup(phone);
+    await bot.sendMessage(msg.chat.id, text, { parse_mode: "Markdown" });
+  });
+
   bot.onText(/^\/start/, async (msg) => {
     const chatId = msg.chat.id;
     // Закрыть предыдущую сессию, если была
@@ -89,11 +144,17 @@ export function startTelegramBot(): TelegramBot | null {
 
     // Распознать что прислал пользователь
     let userText: string | null = null;
+    let userAudioUrl: string | undefined;
     if (msg.voice) {
       await bot.sendChatAction(chatId, "typing");
       try {
         const link = await bot.getFileLink(msg.voice.file_id);
         const audio = Buffer.from(await (await fetch(link)).arrayBuffer());
+        // Сохраняем оригинальный OGG для прослушки в админке (помогает калибровать промт)
+        const turnIndex = session.turnCounter;
+        userAudioUrl =
+          (await saveAudio({ callId: session.callId, turnIndex, speaker: "human", ext: "ogg", data: audio })) ??
+          undefined;
         userText = await transcribe(audio, msg.voice.mime_type ?? "audio/ogg");
       } catch (e) {
         logger.error({ err: String(e), chatId }, "[telegram] ASR failed");
@@ -116,7 +177,7 @@ export function startTelegramBot(): TelegramBot | null {
 
     // Запросить ответ у LLM
     session.messages.push({ role: "user", content: userText });
-    void persistTurn(session, "human", userText);
+    void persistTurn(session, "human", userText, userAudioUrl);
     await bot.sendChatAction(chatId, "typing");
 
     let replyText: string | null;
@@ -134,15 +195,21 @@ export function startTelegramBot(): TelegramBot | null {
     }
 
     session.messages.push({ role: "assistant", content: replyText });
-    void persistTurn(session, "bot", replyText);
 
     // Сначала текст (мгновенно), потом голос (если настроен ElevenLabs)
     await bot.sendMessage(chatId, replyText);
 
+    let botAudioUrl: string | undefined;
     try {
       await bot.sendChatAction(chatId, "upload_voice");
       const audio = await synthesize(replyText);
       if (audio) {
+        // Сохраняем MP3-ответ для прослушки в админке
+        const turnIndex = session.turnCounter; // ещё не инкрементнут — будет таким же turnIndex что и persist ниже
+        botAudioUrl =
+          (await saveAudio({ callId: session.callId, turnIndex, speaker: "bot", ext: "mp3", data: audio })) ??
+          undefined;
+
         // sendAudio принимает MP3 без конвертации (UI: трек, не «голосовой бабл»).
         // Когда поставим ffmpeg и научимся конвертить в OGG Opus — переключим на sendVoice.
         await bot.sendAudio(
@@ -155,6 +222,9 @@ export function startTelegramBot(): TelegramBot | null {
     } catch (e) {
       logger.warn({ err: String(e), chatId }, "[telegram] TTS failed (текст уже отправлен)");
     }
+
+    // persistTurn делается ПОСЛЕ синтеза, чтобы в БД сразу был audio_url
+    void persistTurn(session, "bot", replyText, botAudioUrl);
   });
 
   logger.info("📱 telegram bot started (polling)");
@@ -195,11 +265,16 @@ async function freshState(firstName?: string, telegramUserId?: number): Promise<
   return state;
 }
 
-async function persistTurn(state: ChatState, speaker: "bot" | "human", text: string): Promise<void> {
+async function persistTurn(
+  state: ChatState,
+  speaker: "bot" | "human",
+  text: string,
+  audioUrl?: string,
+): Promise<void> {
   if (!dbEnabled) return;
   const turnIndex = state.turnCounter++;
   try {
-    await insertTranscriptTurn({ callId: state.callId, turnIndex, speaker, text });
+    await insertTranscriptTurn({ callId: state.callId, turnIndex, speaker, text, audioUrl });
   } catch (e) {
     logger.warn({ err: String(e), callId: state.callId }, "[telegram] не записали transcript_turn");
   }
@@ -225,6 +300,109 @@ function telegramSummary(state: ChatState): string {
   if (human.length === 0) return "Telegram: пользователь не отвечал";
   if (state.collectedEmail) return `Telegram: email собран ${state.collectedEmail}`;
   return `Telegram: ${human.length} реплик(и) от ${state.telegramUserName ?? "пользователя"}`;
+}
+
+// =================================================================
+// Админ-отчёты для Telegram-команд
+// =================================================================
+
+import pg from "pg";
+const { Pool: AdminPool } = pg;
+let adminPool: pg.Pool | null = null;
+function getAdminPool(): pg.Pool | null {
+  if (adminPool) return adminPool;
+  if (!config.DATABASE_URL) return null;
+  adminPool = new AdminPool({ connectionString: config.DATABASE_URL, max: 2 });
+  return adminPool;
+}
+
+async function formatStats(): Promise<string> {
+  const pool = getAdminPool();
+  if (!pool) return "БД недоступна";
+  const r = await pool.query(`
+    SELECT
+      (SELECT COUNT(*) FROM calls) as total,
+      (SELECT COUNT(*) FROM calls WHERE created_at >= CURRENT_DATE) as today,
+      (SELECT COUNT(*) FROM calls WHERE collected_email IS NOT NULL) as emails,
+      (SELECT COUNT(*) FROM contacts) as contacts,
+      (SELECT COUNT(*) FROM campaigns WHERE status IN ('running','scheduled')) as campaigns_active
+  `);
+  const row = r.rows[0] ?? {};
+  const total = Number(row.total ?? 0);
+  const today = Number(row.today ?? 0);
+  const emails = Number(row.emails ?? 0);
+  const conv = total > 0 ? Math.round((emails / total) * 100) : 0;
+  return [
+    "📊 *Saymen — сводка*",
+    `Разговоров: *${total}* (сегодня: ${today})`,
+    `Email собрано: *${emails}* (конверсия ${conv}%)`,
+    `Контакты в базе: *${row.contacts ?? 0}*`,
+    `Активных кампаний: *${row.campaigns_active ?? 0}*`,
+  ].join("\n");
+}
+
+async function formatLastCall(): Promise<string> {
+  const pool = getAdminPool();
+  if (!pool) return "БД недоступна";
+  const r = await pool.query(`
+    SELECT id, direction, caller_number, callee_number, outcome, duration_seconds,
+           summary, collected_email, started_at, created_at
+    FROM calls
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+  if (r.rows.length === 0) return "Звонков пока нет";
+  const c = r.rows[0]!;
+  const cp = c.direction === "inbound" ? c.caller_number : c.callee_number;
+  const when = new Date(c.started_at ?? c.created_at).toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return [
+    "📞 *Последний разговор*",
+    `Когда: ${when}`,
+    `С кем: \`${cp}\``,
+    `Итог: *${c.outcome ?? "не завершён"}*`,
+    c.duration_seconds ? `Длительность: ${c.duration_seconds}с` : "",
+    c.collected_email ? `📧 ${c.collected_email}` : "",
+    c.summary ? `\nРезюме: _${String(c.summary).slice(0, 200)}_` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function formatLookup(phone: string): Promise<string> {
+  const pool = getAdminPool();
+  if (!pool) return "БД недоступна";
+  const r = await pool.query(
+    `
+    SELECT c.company_name, c.industry, c.city, c.region, c.known_email,
+           c.attempts, c.last_call_at, c.last_call_outcome, c.do_not_call,
+           c.collected_email
+    FROM contacts c
+    WHERE c.phone = $1
+    LIMIT 1
+  `,
+    [phone],
+  );
+  if (r.rows.length === 0) return `Контакта с телефоном ${phone} нет в базе`;
+  const c = r.rows[0]!;
+  return [
+    `🏢 *${c.company_name}*`,
+    `📞 \`${phone}\``,
+    `Отрасль: ${c.industry}`,
+    c.city ? `Город: ${c.city}${c.region ? `, ${c.region}` : ""}` : "",
+    c.known_email ? `Email (известный): ${c.known_email}` : "",
+    c.collected_email ? `Email (собранный): *${c.collected_email}*` : "",
+    `Попыток: ${c.attempts ?? 0}`,
+    c.last_call_at ? `Последний звонок: ${new Date(c.last_call_at).toLocaleString("ru-RU")}` : "",
+    c.last_call_outcome ? `Итог: ${c.last_call_outcome}` : "",
+    c.do_not_call ? "⛔ В стоп-листе" : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 // =================================================================
