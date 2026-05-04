@@ -104,7 +104,19 @@ export default async function CallDetailPage(props: { params: Promise<{ id: stri
                       </span>
                     )}
                   </div>
-                  <div className={isBot ? "text-blue-950" : "text-slate-900"}>{t.text}</div>
+                  <div className={`mb-2 ${isBot ? "text-blue-950" : "text-slate-900"}`}>
+                    {t.text}
+                  </div>
+                  {t.audioUrl && (
+                    <audio
+                      controls
+                      preload="none"
+                      src={t.audioUrl}
+                      className="mt-1 h-8 w-full"
+                    >
+                      Ваш браузер не поддерживает audio
+                    </audio>
+                  )}
                 </div>
               );
             })}

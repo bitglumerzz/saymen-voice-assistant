@@ -141,16 +141,25 @@ export async function insertTranscriptTurn(opts: {
   turnIndex: number;
   speaker: "bot" | "human";
   text: string;
+  audioUrl?: string;
   startMs?: number;
   endMs?: number;
 }): Promise<void> {
   if (!pool) return;
   await pool.query(
     `INSERT INTO transcript_turns
-       (call_id, turn_index, speaker, text, start_ms, end_ms)
-     VALUES ($1, $2, $3, $4, $5, $6)
+       (call_id, turn_index, speaker, text, audio_url, start_ms, end_ms)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (call_id, turn_index) DO NOTHING`,
-    [opts.callId, opts.turnIndex, opts.speaker, opts.text, opts.startMs ?? null, opts.endMs ?? null],
+    [
+      opts.callId,
+      opts.turnIndex,
+      opts.speaker,
+      opts.text,
+      opts.audioUrl ?? null,
+      opts.startMs ?? null,
+      opts.endMs ?? null,
+    ],
   );
 }
 
