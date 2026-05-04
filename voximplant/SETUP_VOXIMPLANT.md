@@ -70,7 +70,7 @@
 
 ## Шаг 6. Открыть оркестратор для Voximplant
 
-Voximplant запускает наш `scenario.js` на своих серверах. Этот сценарий должен подключиться WebSocket-ом к нашему оркестратору — но `ws://localhost:8080` ему недоступно. Нужен публичный URL.
+Voximplant запускает наш `scenario.js` на своих серверах. Этот сценарий должен подключиться WebSocket-ом к нашему оркестратору — но `ws://localhost:8181` ему недоступно. Нужен публичный URL.
 
 В разработке — туннель.
 
@@ -81,7 +81,7 @@ brew install ngrok/ngrok/ngrok
 ngrok config add-authtoken <ваш токен с ngrok.com>
 
 # в отдельном терминале (оркестратор должен быть запущен):
-ngrok http 8080
+ngrok http 8181
 ```
 
 ngrok покажет URL вида `https://a1b2-c3d4.ngrok-free.app`. WebSocket будет на `wss://a1b2-c3d4.ngrok-free.app/voice`. Сохранить:
@@ -97,7 +97,7 @@ VOXIMPLANT_WEBHOOK_SECRET=<любая длинная случайная стро
 
 ```bash
 brew install cloudflared
-cloudflared tunnel --url http://localhost:8080
+cloudflared tunnel --url http://localhost:8181
 ```
 
 Также покажет публичный URL `*.trycloudflare.com`, использовать аналогично.
@@ -131,7 +131,7 @@ npm run dev
 ### 7.2. Запустить ngrok
 
 ```bash
-ngrok http 8080
+ngrok http 8181
 ```
 
 Скопировать публичный wss-URL в `.env.local` Next.js (`VOXIMPLANT_PUBLIC_WS_URL`).

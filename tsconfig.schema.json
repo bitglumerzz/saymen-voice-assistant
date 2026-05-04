@@ -19,6 +19,7 @@
     "src/lib/audio.ts",
     "src/lib/voximplant.ts",
     "src/lib/csv-import.ts",
+    "src/lib/unisender.ts",
     "drizzle.config.ts"
   ],
   "exclude": ["node_modules"]
