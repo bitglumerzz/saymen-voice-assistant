@@ -60,3 +60,6 @@ drizzle/meta/_journal.json.bak
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Реальные записи звонков — не выкладывать
+/data/recordings/
